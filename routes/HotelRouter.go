@@ -7,12 +7,12 @@ import (
 
 func HotelRoutes(r *gin.Engine) {
 	//Hotel CRUD
-	r.POST("/hotels", controllers.CreateHotelHandler)
+	r.POST("/hotel", controllers.CreateHotelHandler)
 	r.GET("/hotels/search", controllers.SearchHotelsHandler)
 	r.GET("/hotels/popular", controllers.GetPopularHotelsHandler)
-	r.GET("/hotels/:id", controllers.GetHotelHandler)
-	r.PUT("/hotels/:id", controllers.UpdateHotelHandler)
-	r.DELETE("/hotels/:id", controllers.DeleteHotelHandler)
+	r.GET("/hotel/:id", controllers.GetHotelHandler)
+	r.PUT("/hotel/:id", controllers.UpdateHotelHandler)
+	r.DELETE("/hotel/:id", controllers.DeleteHotelHandler)
 
 	//Hotel Details
 	r.PUT("/hotels/:id/change-name", controllers.ChangeHotelNameHandler)
