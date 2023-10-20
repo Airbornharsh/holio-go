@@ -84,6 +84,7 @@ func makeRoomsTable(db *sql.DB) {
 			hotel_id INT REFERENCES Hotels(hotel_id),
 			room_number INT NOT NULL,
 			room_type VARCHAR(100) NOT NULL,
+			room_capacity INT NOT NULL,
 			description TEXT,
 			price DECIMAL(10, 2) NOT NULL,
 			rating DECIMAL(3, 2) NOT NULL,

@@ -5,6 +5,7 @@ type Room struct {
 	HotelID      int     `json:"hotel_id"`
 	RoomNumber   int     `json:"room_number"`
 	RoomType     string  `json:"room_type"`
+	RoomCapacity int     `json:"room_capacity"`
 	Description  string  `json:"description"`
 	Price        float64 `json:"price"`
 	Rating       float64 `json:"rating"`
