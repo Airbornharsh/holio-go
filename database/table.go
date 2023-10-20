@@ -97,6 +97,7 @@ func makeAmenitiesTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Amenities (
 			amenity_id SERIAL PRIMARY KEY,
+			Hotel_id INT REFERENCES Hotels(hotel_id),
       name VARCHAR(255) NOT NULL,
       description TEXT
 		);
@@ -138,7 +139,7 @@ func makeReviewsTable(db *sql.DB) {
 			hotel_id INT REFERENCES Hotels(hotel_id),
 			rating DECIMAL(3, 2) NOT NULL,
 			review_text TEXT,
-			date DATE NOT NULL
+			review_date DATE NOT NULL
 		);
 	`
 	createTableIfNot(db, c, "Reviews")
