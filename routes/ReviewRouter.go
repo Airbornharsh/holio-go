@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/airbornharsh/holio-go/controllers"
 	"github.com/gin-gonic/gin"
 )
 
