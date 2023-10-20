@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/airbornharsh/holio-go/database"
+	"github.com/airbornharsh/holio-go/routes"
 )
 
 type widgets struct {
@@ -24,6 +25,13 @@ func main() {
 	r := gin.Default()
 	r.Use(gin.Logger())
 
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Welcome to Holio",
+		})
+	})
+
+	routes.Router(r)
 
 	r.Run(":" + port)
 

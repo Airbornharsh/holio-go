@@ -1,0 +1,14 @@
+package routes
+
+import "github.com/gin-gonic/gin"
+
+func AuthRoutes(r *gin.Engine) {
+	r.POST("/signup", controllers.SignupHandler)
+	r.POST("/login", controllers.LoginHanlder)
+	r.POST("/logout", controllers.LogoutHandler)
+	r.POST("/forgot-password", controllers.ForgotPasswordHandler)
+	r.POST("/reset-password", controllers.ResetPasswordHandler)
+	r.POST("/change-password", controllers.ChangePasswordHandler)
+	r.POST("/change-email", controllers.ChangeEmailHandler)
+	r.POST("/change-phone", controllers.ChangePhoneHandler)
+}
