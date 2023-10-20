@@ -22,7 +22,7 @@ func main() {
 		port = "8080"
 	}
 
-	r := gin.Default()
+	r := gin.New()
 	r.Use(gin.Logger())
 
 	r.GET("/", func(c *gin.Context) {
