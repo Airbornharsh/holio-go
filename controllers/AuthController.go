@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/airbornharsh/holio-go/database"
 	"github.com/airbornharsh/holio-go/helpers"
@@ -15,9 +15,9 @@ func SignupHandler(c *gin.Context) {
 
 	//Bind JSON to Struct
 	if err := c.BindJSON(&user); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		c.JSON(500, gin.H{
-			"message": "Error Binding JSON",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -33,23 +33,23 @@ func SignupHandler(c *gin.Context) {
 	//Getting DB
 	DB, err := database.GetDB()
 	if err != nil {
-		log.Fatal("Error Getting DB:", err)
+		fmt.Println(err)
 		c.JSON(500, gin.H{
-			"message": "Error Getting DB",
+			"message": err.Error(),
 		})
 		return
-		
+
 	}
-	
+
 	//Check if User Already Exists
 	s := `SELECT EXISTS(SELECT 1 FROM users WHERE username = '` + user.Username + `' OR email = '` + user.Email + `' OR phone_number = '` + user.PhoneNumber + `');`
 
 	var exists bool
 	rows, err := DB.Query(s)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		c.JSON(500, gin.H{
-			"message": "Error Querying DB",
+			"message": err.Error(),
 		})
 		return
 
@@ -58,9 +58,9 @@ func SignupHandler(c *gin.Context) {
 	if rows.Next() {
 		err = rows.Scan(&exists)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
 			c.JSON(500, gin.H{
-				"message": "Error Scanning Rows",
+				"message": err.Error(),
 			})
 			return
 		}
@@ -73,9 +73,9 @@ func SignupHandler(c *gin.Context) {
 	//Hashing Password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
 	if err != nil {
-		log.Fatal("Error While hashing the Password:", err)
+		fmt.Println(err)
 		c.JSON(500, gin.H{
-			"message": "Error While hashing the Password",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -88,21 +88,122 @@ func SignupHandler(c *gin.Context) {
 
 	_, err = DB.Exec(s)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		c.JSON(500, gin.H{
-			"message": "Error Executing Query",
+			"message": err.Error(),
 		})
 		return
 	}
 
+	token, err := helpers.GenerateToken(&user)
+
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.Writer.Header().Set("Authorization", "Bearer "+token)
 	c.JSON(200, gin.H{
 		"message": "User Created",
+		"token":   token,
+		"userData": gin.H{
+			"username":     user.Username,
+			"email":        user.Email,
+			"full_name":    user.FullName,
+			"address":      user.Address,
+			"phone_number": user.PhoneNumber,
+			"user_type":    user.UserType,
+		},
 	})
 }
 
 func LoginHanlder(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "LoginHanlder",
+	var tempuser models.User
+	var user models.User
+
+	//Bind JSON to Struct
+	if err := c.BindJSON(&tempuser); err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	//Getting DB
+	DB, err := database.GetDB()
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	//Check if User Already Exists
+	s := `SELECT * FROM users WHERE username = '` + tempuser.Username + `' OR email = '` + tempuser.Email + `' OR phone_number = '` + tempuser.PhoneNumber + `';`
+
+	rows, err := DB.Query(s)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if rows.Next() {
+		err = rows.Scan(&user.UserID, &user.Username, &user.Password, &user.UserType, &user.Email, &user.FullName, &user.Address, &user.PhoneNumber)
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		//Comparing Password
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(tempuser.Password))
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		//Generate Token
+		token, err := helpers.GenerateToken(&user)
+
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.Writer.Header().Set("Authorization", "Bearer "+token)
+		c.JSON(200, gin.H{
+			"message": "Login Successful",
+			"token":   token,
+			"userData": gin.H{
+				"username":     user.Username,
+				"email":        user.Email,
+				"full_name":    user.FullName,
+				"address":      user.Address,
+				"phone_number": user.PhoneNumber,
+				"user_type":    user.UserType,
+			},
+		})
+		return
+	}
+
+	c.JSON(400, gin.H{
+		"message": "User Does Not Exists",
 	})
 }
 
