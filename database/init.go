@@ -24,10 +24,12 @@ func DBInit() {
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	// defer db.Close()
 
 	MakeTable(db)
 	// DropTables(db)
+
+	DB = db
 
 	fmt.Println("Database initialized")
 }
@@ -35,7 +37,7 @@ func DBInit() {
 func GetDB() (*sql.DB, error) {
 	err := DB.Ping()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error Pinging Database:", err)
 		return nil, err
 	}
 	fmt.Println("Connected to database")
