@@ -13,7 +13,7 @@ import (
 func SignupHandler(c *gin.Context) {
 	var user models.User
 
-	//Bind JSON to Struct 
+	//Bind JSON to Struct
 	err := c.BindJSON(&user)
 	if helpers.ErrorResponse(c, err) {
 		return
@@ -256,13 +256,11 @@ func ChangeEmailHandler(c *gin.Context) {
 	query := "UPDATE users SET email = '" + email.NewEmail + "' WHERE user_id = '" + strconv.Itoa(tempUser.(models.User).UserID) + "';"
 
 	DB, err := database.GetDB()
-
 	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	_, err = DB.Exec(query)
-
 	if helpers.ErrorResponse(c, err) {
 		return
 	}
@@ -273,7 +271,33 @@ func ChangeEmailHandler(c *gin.Context) {
 }
 
 func ChangePhoneHandler(c *gin.Context) {
+	tempUser, exits := c.Get("user")
+
+	if !(exits && tempUser != nil) {
+		return
+	}
+
+	type PhoneNumber struct {
+		NewPhoneNumber string `json:"new_phone_number"`
+	}
+
+	var phoneNumber PhoneNumber
+
+	c.BindJSON(&phoneNumber)
+
+	query := "UPDATE users SET phone_number = '" + phoneNumber.NewPhoneNumber + "' WHERE user_id = '" + strconv.Itoa(tempUser.(models.User).UserID) + "';"
+
+	DB, err := database.GetDB()
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	_, err = DB.Exec(query)
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "ChangePhoneHandler",
+		"message": "Phone updated successfully",
 	})
 }
