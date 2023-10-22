@@ -26,7 +26,7 @@ func DBInit() {
 	}
 	// defer db.Close()
 
-	MakeTable(db)
+	// MakeTable(db)
 	// DropTables(db)
 
 	DB = db

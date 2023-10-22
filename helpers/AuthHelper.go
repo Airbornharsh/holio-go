@@ -23,7 +23,10 @@ func GenerateToken(user *models.User) (string, error) {
 	JWTSECRET := os.Getenv("JWT_SECRET")
 
 	claims := jwt.MapClaims{
-		"user_id": user.UserID,
+		"user_id":      user.UserID,
+		"username":     user.Username,
+		"email":        user.Email,
+		"phone_number": user.PhoneNumber,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

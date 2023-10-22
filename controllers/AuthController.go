@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/airbornharsh/holio-go/database"
@@ -14,12 +13,9 @@ import (
 func SignupHandler(c *gin.Context) {
 	var user models.User
 
-	//Bind JSON to Struct
-	if err := c.BindJSON(&user); err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	//Bind JSON to Struct 
+	err := c.BindJSON(&user)
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
@@ -33,35 +29,22 @@ func SignupHandler(c *gin.Context) {
 
 	//Getting DB
 	DB, err := database.GetDB()
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
-
 	}
 
 	//Check if User Already Exists
-	query:= `SELECT EXISTS(SELECT 1 FROM users WHERE username = '` + user.Username + `' OR email = '` + user.Email + `' OR phone_number = '` + user.PhoneNumber + `');`
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE username = '` + user.Username + `' OR email = '` + user.Email + `' OR phone_number = '` + user.PhoneNumber + `');`
 
 	var exists bool
 	rows, err := DB.Query(query)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	if rows.Next() {
 		err = rows.Scan(&exists)
-		if err != nil {
-			fmt.Println(err)
-			c.JSON(500, gin.H{
-				"message": err.Error(),
-			})
+		if helpers.ErrorResponse(c, err) {
 			return
 		}
 
@@ -75,11 +58,7 @@ func SignupHandler(c *gin.Context) {
 
 	//Hashing Password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 14)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
@@ -90,21 +69,13 @@ func SignupHandler(c *gin.Context) {
 	query = "INSERT INTO Users (username,password,user_type,email,full_name,address,phone_number) VALUES('" + user.Username + "','" + user.Password + "','" + user.UserType + "','" + user.Email + "','" + user.FullName + "','" + user.Address + "','" + user.PhoneNumber + "');"
 
 	_, err = DB.Exec(query)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	token, err := helpers.GenerateToken(&user)
 
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
@@ -128,21 +99,14 @@ func LoginHanlder(c *gin.Context) {
 	var user models.User
 
 	//Bind JSON to Struct
-	if err := c.BindJSON(&tempuser); err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	err := c.BindJSON(&tempuser)
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	//Getting DB
 	DB, err := database.GetDB()
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
@@ -150,42 +114,25 @@ func LoginHanlder(c *gin.Context) {
 	query := `SELECT * FROM users WHERE username = '` + tempuser.Username + `' OR email = '` + tempuser.Email + `' OR phone_number = '` + tempuser.PhoneNumber + `';`
 
 	rows, err := DB.Query(query)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	if rows.Next() {
 		err = rows.Scan(&user.UserID, &user.Username, &user.Password, &user.UserType, &user.Email, &user.FullName, &user.Address, &user.PhoneNumber)
-		if err != nil {
-			fmt.Println(err)
-			c.JSON(500, gin.H{
-				"message": err.Error(),
-			})
+		if helpers.ErrorResponse(c, err) {
 			return
 		}
-
 		//Comparing Password
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(tempuser.Password))
-		if err != nil {
-			fmt.Println(err)
-			c.JSON(500, gin.H{
-				"message": err.Error(),
-			})
+		if helpers.ErrorResponse(c, err) {
 			return
 		}
 
 		//Generate Token
 		token, err := helpers.GenerateToken(&user)
 
-		if err != nil {
-			fmt.Println(err)
-			c.JSON(500, gin.H{
-				"message": err.Error(),
-			})
+		if helpers.ErrorResponse(c, err) {
 			return
 		}
 
@@ -249,20 +196,12 @@ func ChangePasswordHandler(c *gin.Context) {
 	query := "SELECT password FROM users WHERE user_id = '" + strconv.Itoa(user.UserID) + "';"
 
 	DB, err := database.GetDB()
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	rows, err := DB.Query(query)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 	defer rows.Close()
@@ -270,43 +209,27 @@ func ChangePasswordHandler(c *gin.Context) {
 	var password string
 	if rows.Next() {
 		err = rows.Scan(&password)
-		if err != nil {
-			fmt.Println(err)
-			c.JSON(500, gin.H{
-				"message": err.Error(),
-			})
+		if helpers.ErrorResponse(c, err) {
 			return
 		}
 	}
 
 	//Comparing Password
 	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(passWord.OldPassword))
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": "Old password is incorrect",
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
 	//Hashing New Password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passWord.NewPassword), 14)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
-
 	//Updating Password
 	query = "UPDATE users SET password = '" + string(hashedPassword) + "' WHERE user_id = '" + strconv.Itoa(user.UserID) + "';"
 	_, err = DB.Exec(query)
-	if err != nil {
-		fmt.Println(err)
-		c.JSON(500, gin.H{
-			"message": err.Error(),
-		})
+
+	if helpers.ErrorResponse(c, err) {
 		return
 	}
 
@@ -316,8 +239,36 @@ func ChangePasswordHandler(c *gin.Context) {
 }
 
 func ChangeEmailHandler(c *gin.Context) {
+	tempUser, exits := c.Get("user")
+
+	if !(exits && tempUser != nil) {
+		return
+	}
+
+	type Email struct {
+		NewEmail string `json:"new_email"`
+	}
+
+	var email Email
+
+	c.BindJSON(&email)
+
+	query := "UPDATE users SET email = '" + email.NewEmail + "' WHERE user_id = '" + strconv.Itoa(tempUser.(models.User).UserID) + "';"
+
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "ChangeEmailHandler",
+		"message": "Email updated successfully",
 	})
 }
 

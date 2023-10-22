@@ -18,6 +18,7 @@ func TokenVerifyMiddleWare(c *gin.Context) {
 		c.Set("user", nil)
 
 		c.Next()
+		return	
 	}
 
 	// tokenString := strings.Split(Auth, " ")[1]

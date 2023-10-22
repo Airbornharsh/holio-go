@@ -13,6 +13,6 @@ func AuthRoutes(r *gin.Engine) {
 	r.POST("/forgot-password", controllers.ForgotPasswordHandler)
 	r.POST("/reset-password", controllers.ResetPasswordHandler)
 	r.POST("/change-password", middlewares.TokenVerifyMiddleWare, controllers.ChangePasswordHandler)
-	r.POST("/change-email", controllers.ChangeEmailHandler)
+	r.POST("/change-email", middlewares.TokenVerifyMiddleWare, controllers.ChangeEmailHandler)
 	r.POST("/change-phone", controllers.ChangePhoneHandler)
 }
