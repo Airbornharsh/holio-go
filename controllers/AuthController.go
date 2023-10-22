@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/airbornharsh/holio-go/database"
 	"github.com/airbornharsh/holio-go/helpers"
@@ -42,17 +43,16 @@ func SignupHandler(c *gin.Context) {
 	}
 
 	//Check if User Already Exists
-	s := `SELECT EXISTS(SELECT 1 FROM users WHERE username = '` + user.Username + `' OR email = '` + user.Email + `' OR phone_number = '` + user.PhoneNumber + `');`
+	query:= `SELECT EXISTS(SELECT 1 FROM users WHERE username = '` + user.Username + `' OR email = '` + user.Email + `' OR phone_number = '` + user.PhoneNumber + `');`
 
 	var exists bool
-	rows, err := DB.Query(s)
+	rows, err := DB.Query(query)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{
 			"message": err.Error(),
 		})
 		return
-
 	}
 
 	if rows.Next() {
@@ -64,10 +64,13 @@ func SignupHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(200, gin.H{
-			"message": "User Already Exists",
-		})
-		return
+
+		if exists {
+			c.JSON(200, gin.H{
+				"message": "User Already Exists",
+			})
+			return
+		}
 	}
 
 	//Hashing Password
@@ -84,9 +87,9 @@ func SignupHandler(c *gin.Context) {
 	user.UserType = "user"
 
 	//Inserting User
-	s = "INSERT INTO Users (username,password,user_type,email,full_name,address,phone_number) VALUES('" + user.Username + "','" + user.Password + "','" + user.UserType + "','" + user.Email + "','" + user.FullName + "','" + user.Address + "','" + user.PhoneNumber + "');"
+	query = "INSERT INTO Users (username,password,user_type,email,full_name,address,phone_number) VALUES('" + user.Username + "','" + user.Password + "','" + user.UserType + "','" + user.Email + "','" + user.FullName + "','" + user.Address + "','" + user.PhoneNumber + "');"
 
-	_, err = DB.Exec(s)
+	_, err = DB.Exec(query)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{
@@ -144,9 +147,9 @@ func LoginHanlder(c *gin.Context) {
 	}
 
 	//Check if User Already Exists
-	s := `SELECT * FROM users WHERE username = '` + tempuser.Username + `' OR email = '` + tempuser.Email + `' OR phone_number = '` + tempuser.PhoneNumber + `';`
+	query := `SELECT * FROM users WHERE username = '` + tempuser.Username + `' OR email = '` + tempuser.Email + `' OR phone_number = '` + tempuser.PhoneNumber + `';`
 
-	rows, err := DB.Query(s)
+	rows, err := DB.Query(query)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(500, gin.H{
@@ -226,8 +229,89 @@ func ResetPasswordHandler(c *gin.Context) {
 }
 
 func ChangePasswordHandler(c *gin.Context) {
+	tempuser, exists := c.Get("user")
+
+	if !(exists && tempuser != nil) {
+		return
+	}
+
+	type PassWord struct {
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
+	}
+
+	var passWord PassWord
+
+	c.BindJSON(&passWord)
+
+	user := tempuser.(models.User)
+
+	query := "SELECT password FROM users WHERE user_id = '" + strconv.Itoa(user.UserID) + "';"
+
+	DB, err := database.GetDB()
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	rows, err := DB.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+	defer rows.Close()
+
+	var password string
+	if rows.Next() {
+		err = rows.Scan(&password)
+		if err != nil {
+			fmt.Println(err)
+			c.JSON(500, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+	}
+
+	//Comparing Password
+	err = bcrypt.CompareHashAndPassword([]byte(password), []byte(passWord.OldPassword))
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": "Old password is incorrect",
+		})
+		return
+	}
+
+	//Hashing New Password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passWord.NewPassword), 14)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	//Updating Password
+	query = "UPDATE users SET password = '" + string(hashedPassword) + "' WHERE user_id = '" + strconv.Itoa(user.UserID) + "';"
+	_, err = DB.Exec(query)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(500, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "ChangePasswordHandler",
+		"message": "Password updated successfully",
 	})
 }
 
