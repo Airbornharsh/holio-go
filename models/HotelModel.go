@@ -2,6 +2,7 @@ package models
 
 type Hotel struct {
 	HotelID     int     `json:"hotel_id"`
+	OwnerUserId int     `json:"owner_user_id"`
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	Address     string  `json:"address"`

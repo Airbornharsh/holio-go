@@ -27,6 +27,7 @@ func GenerateToken(user *models.User) (string, error) {
 		"username":     user.Username,
 		"email":        user.Email,
 		"phone_number": user.PhoneNumber,
+		"user_type":    user.UserType,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

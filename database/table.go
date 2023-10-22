@@ -49,6 +49,7 @@ func makeHotelsTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Hotels (
 			hotel_id SERIAL PRIMARY KEY,
+			owner_user_id INT REFERENCES Users(user_id),
 			name VARCHAR(255) NOT NULL,
 			description TEXT,
 			address TEXT,
