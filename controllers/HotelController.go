@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/airbornharsh/holio-go/database"
 	"github.com/airbornharsh/holio-go/helpers"
@@ -23,7 +24,7 @@ func CreateHotelHandler(c *gin.Context) {
 
 	c.BindJSON(&hotel)
 
-	query := `INSERT INTO hotels (owner_user_id, name, description, address, phone_number, website_url, email, latitude, longitude, star_rating, avg_rating, avg_price) VALUES ('` + fmt.Sprintf("%d", tempuser.(models.User).UserID)	 + `', '` + hotel.Name + `', '` + hotel.Description + `', '` + hotel.Address + `', '` + hotel.PhoneNumber + `', '` + hotel.WebsiteURL + `', '` + hotel.Email + `', '` + fmt.Sprintf("%.8f", hotel.Latitude) + `', '` + fmt.Sprintf("%.8f", hotel.Longitude) + `', '` + fmt.Sprintf("%.1f", hotel.StarRating) + `', '` + fmt.Sprintf("%.2f", hotel.AvgRating) + `', '` + fmt.Sprintf("%.2f", hotel.AvgPrice) + `');`
+	query := `INSERT INTO hotels (owner_user_id, name, description, address, phone_number, website_url, email, latitude, longitude, star_rating, avg_rating, avg_price) VALUES ('` + fmt.Sprintf("%d", tempuser.(models.User).UserID) + `', '` + hotel.Name + `', '` + hotel.Description + `', '` + hotel.Address + `', '` + hotel.PhoneNumber + `', '` + hotel.WebsiteURL + `', '` + hotel.Email + `', '` + fmt.Sprintf("%.8f", hotel.Latitude) + `', '` + fmt.Sprintf("%.8f", hotel.Longitude) + `', '` + fmt.Sprintf("%.1f", hotel.StarRating) + `', '` + fmt.Sprintf("%.2f", hotel.AvgRating) + `', '` + fmt.Sprintf("%.2f", hotel.AvgPrice) + `');`
 
 	DB, _ := database.GetDB()
 	_, err := DB.Exec(query)
@@ -39,95 +40,180 @@ func CreateHotelHandler(c *gin.Context) {
 }
 
 func SearchHotelsHandler(c *gin.Context) {
+	q := c.Request.URL.Query()
+
+	hotelName := q.Get("hotel_name")
+	// latitude := q.Get("latitude")
+	// longitude := q.Get("longitude")
+	// startDate := q.Get("start_date")
+	// endDate := q.Get("end_date")
+	priceStart := q.Get("price_start")
+	priceEnd := q.Get("price_end")
+	// startRating := q.Get("start_rating")
+
+	if hotelName == "" || priceStart == "" || priceEnd == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Query Parameters",
+		})
+		return
+	}
+
+	fmt.Println(hotelName)
+
+	query := `SELECT * FROM hotels WHERE name ILIKE '%' || '` + hotelName + `'|| '%' AND avg_price BETWEEN '` + priceStart + `' AND '` + priceEnd + `';`
+
+	DB, _ := database.GetDB()
+
+	var hotelRows []models.Hotel
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	for rows.Next() {
+		var hotel models.Hotel
+
+		err := rows.Scan(&hotel.HotelID, &hotel.OwnerUserId, &hotel.Name, &hotel.Description, &hotel.Address, &hotel.PhoneNumber, &hotel.WebsiteURL, &hotel.Email, &hotel.Latitude, &hotel.Longitude, &hotel.StarRating, &hotel.AvgRating, &hotel.AvgPrice)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		hotelRows = append(hotelRows, hotel)
+	}
+
+	fmt.Println(hotelRows)
+
 	c.JSON(200, gin.H{
-		"message": "SearchHotelsHandler",
+		"message": "Search Hotels",
+		"data":    hotelRows,
 	})
 }
 
 func GetPopularHotelsHandler(c *gin.Context) {
+	q := c.Request.URL.Query()
+
+	minStar := q.Get("min_star")
+
+	var query string
+
+	if minStar == "" {
+		query = `SELECT * FROM hotels ORDER BY star_rating ASC`
+	} else {
+		query = `SELECT * FROM hotels WHERE star_rating >= '` + minStar + `' ORDER BY star_rating ASC`
+	}
+
+	DB, _ := database.GetDB()
+	row, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	defer row.Close()
+
+	var hotelRows []models.Hotel
+
+	for row.Next() {
+		var hotel models.Hotel
+
+		err := row.Scan(&hotel.HotelID, &hotel.OwnerUserId, &hotel.Name, &hotel.Description, &hotel.Address, &hotel.PhoneNumber, &hotel.WebsiteURL, &hotel.Email, &hotel.Latitude, &hotel.Longitude, &hotel.StarRating, &hotel.AvgRating, &hotel.AvgPrice)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		hotelRows = append(hotelRows, hotel)
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetPopularHotelsHandler",
+		"message": "Popular Hotels",
+		"data":    hotelRows,
 	})
 }
 
 func GetHotelHandler(c *gin.Context) {
+	hotelId := c.Param("id")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Hotel Id",
+		})
+		return
+	}
+
+	query := "SELECT * FROM hotels WHERE hotel_id = '" + string(hotelId) + "';"
+
+	var hotel models.Hotel
+
+	DB, _ := database.GetDB()
+	err := DB.QueryRow(query).Scan(&hotel.HotelID, &hotel.OwnerUserId, &hotel.Name, &hotel.Description, &hotel.Address, &hotel.PhoneNumber, &hotel.WebsiteURL, &hotel.Email, &hotel.Latitude, &hotel.Longitude, &hotel.StarRating, &hotel.AvgRating, &hotel.AvgPrice)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetHotelHandler",
+		"message": "Found Hotel",
+		"data":    hotel,
 	})
 }
 
 func UpdateHotelHandler(c *gin.Context) {
-	// var hotels []
+	tempUser, exists := c.Get("user")
 
-	// query := `SELECT * FROM hotels WHERE owner_user_id = '` + string(tempuser.(models.User).UserID) + `';`
+	if !exists && tempUser.(models.User).UserType != "owner" {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	hotelId := c.Param("id")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Hotel Id",
+		})
+		return
+	}
+
+	var tempHotel models.Hotel
+
+	c.Bind(&tempHotel)
+
+	var hotel models.Hotel
+
+	query := `SELECT * FROM hotels WHERE owner_user_id = '` + fmt.Sprintf("%d", tempUser.(models.User).UserID) + `' AND hotel_id = '` + string(hotelId) + `';`
+
+	DB, _ := database.GetDB()
+	err := DB.QueryRow(query).Scan(&hotel.HotelID, &hotel.OwnerUserId, &hotel.Name, &hotel.Description, &hotel.Address, &hotel.PhoneNumber, &hotel.WebsiteURL, &hotel.Email, &hotel.Latitude, &hotel.Longitude, &hotel.StarRating, &hotel.AvgRating, &hotel.AvgPrice)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	hotelPtr := helpers.ReplaceHotel(&hotel, &tempHotel)
+
+	query = `UPDATE hotels SET name = '` + hotelPtr.Name + `' , description = '` + hotelPtr.Description + `' , address = '` + hotelPtr.Address + `' , phone_number = '` + hotelPtr.PhoneNumber + `' , website_url = '` + hotelPtr.WebsiteURL + `' , email = '` + hotelPtr.Email + `' , latitude = '` + fmt.Sprintf("%.8f", hotelPtr.Latitude) + `' , longitude = '` + fmt.Sprintf("%.8f", hotelPtr.Longitude) + `' , star_rating = '` + fmt.Sprintf("%.1f", hotelPtr.StarRating) + `' , avg_rating = 	'` + fmt.Sprintf("%.2f", hotelPtr.AvgRating) + `' , avg_price = '` + fmt.Sprintf("%.2f", hotelPtr.AvgPrice) + `' WHERE hotel_id = '` + strconv.Itoa(hotelPtr.HotelID) + `';`
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "UpdateHotelHandler",
+		"message": "Updated Hotel",
+		"data":    hotel,
 	})
 }
 
 func DeleteHotelHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "DeleteHotelHandler",
-	})
-}
-
-func ChangeHotelNameHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelNameHandler",
-	})
-}
-
-func ChangeHotelDescriptionHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelDescriptionHandler",
-	})
-}
-
-func ChangeHotelAddressHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelAddressHandler",
-	})
-}
-
-func ChangeHotelPhoneHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelPhoneHandler",
-	})
-}
-
-func ChangeHotelWebsiteHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelWebsiteHandler",
-	})
-}
-
-func ChangeHotelEmailHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelEmailHandler",
-	})
-}
-
-func ChangeHotelStarRatingHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelStarRatingHandler",
-	})
-}
-
-func ChangeHotelAvgRatingHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelAvgRatingHandler",
-	})
-}
-
-func ChangeHotelAvgPriceHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelAvgPriceHandler",
-	})
-}
-
-func ChangeHotelLocationHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeHotelLocationHandler",
 	})
 }
 
