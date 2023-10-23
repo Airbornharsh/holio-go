@@ -6,7 +6,7 @@ type Hotel struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	Address     string  `json:"address"`
-	Phone       string  `json:"phone"`
+	PhoneNumber       string  `json:"phone_number"`
 	WebsiteURL  string  `json:"website_url"`
 	Email       string  `json:"email"`
 	Latitude    float64 `json:"latitude"`

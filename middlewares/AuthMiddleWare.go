@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"fmt"
+
 	"github.com/airbornharsh/holio-go/database"
 	"github.com/airbornharsh/holio-go/helpers"
 	"github.com/airbornharsh/holio-go/models"
@@ -18,7 +20,7 @@ func TokenVerifyMiddleWare(c *gin.Context) {
 		c.Set("user", nil)
 
 		c.Next()
-		return	
+		return
 	}
 
 	// tokenString := strings.Split(Auth, " ")[1]
@@ -73,6 +75,7 @@ func TokenVerifyMiddleWare(c *gin.Context) {
 	err = DB.QueryRow(query).Scan(&user.UserID, &user.Username, &user.Password, &user.UserType, &user.Email, &user.FullName, &user.Address, &user.PhoneNumber)
 
 	if err != nil {
+		fmt.Println(err.Error())
 		c.JSON(400, gin.H{
 			"message": err.Error(),
 		})

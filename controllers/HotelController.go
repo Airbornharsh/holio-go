@@ -1,10 +1,40 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"fmt"
+
+	"github.com/airbornharsh/holio-go/database"
+	"github.com/airbornharsh/holio-go/helpers"
+	"github.com/airbornharsh/holio-go/models"
+	"github.com/gin-gonic/gin"
+)
 
 func CreateHotelHandler(c *gin.Context) {
+	tempuser, exists := c.Get("user")
+
+	if !exists && tempuser.(models.User).UserType != "owner" {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	var hotel models.Hotel
+
+	c.BindJSON(&hotel)
+
+	query := `INSERT INTO hotels (owner_user_id, name, description, address, phone_number, website_url, email, latitude, longitude, star_rating, avg_rating, avg_price) VALUES ('` + fmt.Sprintf("%d", tempuser.(models.User).UserID)	 + `', '` + hotel.Name + `', '` + hotel.Description + `', '` + hotel.Address + `', '` + hotel.PhoneNumber + `', '` + hotel.WebsiteURL + `', '` + hotel.Email + `', '` + fmt.Sprintf("%.8f", hotel.Latitude) + `', '` + fmt.Sprintf("%.8f", hotel.Longitude) + `', '` + fmt.Sprintf("%.1f", hotel.StarRating) + `', '` + fmt.Sprintf("%.2f", hotel.AvgRating) + `', '` + fmt.Sprintf("%.2f", hotel.AvgPrice) + `');`
+
+	DB, _ := database.GetDB()
+	_, err := DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "CreateHotelHandler",
+		"message": "Hotel Created SuccessFully",
 	})
 }
 
@@ -27,6 +57,9 @@ func GetHotelHandler(c *gin.Context) {
 }
 
 func UpdateHotelHandler(c *gin.Context) {
+	// var hotels []
+
+	// query := `SELECT * FROM hotels WHERE owner_user_id = '` + string(tempuser.(models.User).UserID) + `';`
 	c.JSON(200, gin.H{
 		"message": "UpdateHotelHandler",
 	})
