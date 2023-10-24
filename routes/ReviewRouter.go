@@ -16,9 +16,4 @@ func ReviewsRoutes(r *gin.Engine) {
 	//Review CRUD
 	// r.PUT("/reviews/:reviewId", controllers.UpdateReviewHandler)
 	// r.DELETE("/reviews/:reviewId", controllers.DeleteReviewHandler)
-	// r.PUT("/reviews/:reviewId/change-rating", controllers.ChangeReviewRatingHandler)
-	// r.PUT("/reviews/:reviewId/change-title", controllers.ChangeReviewTitleHandler)
-	// r.PUT("/reviews/:reviewId/change-description", controllers.ChangeReviewDescriptionHandler)
-	// r.PUT("/reviews/:reviewId/change-user-id", controllers.ChangeReviewUserIdHandler)
-	// r.PUT("/reviews/:reviewId/change-hotel-id", controllers.ChangeReviewHotelIdHandler)
 }
