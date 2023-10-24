@@ -186,8 +186,69 @@ func UpdateRoomHandler(c *gin.Context) {
 }
 
 func DeleteRoomHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to delete a room",
+		})
+		return
+	}
+
+	roomId := c.Param("id")
+
+	if roomId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Room Id",
+		})
+		return
+	}
+
+	var hotelId int
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	query := "SELECT hotel_id FROM rooms WHERE room_id = '" + roomId + "';"
+
+	err = DB.QueryRow(query).Scan(&hotelId)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var hotelExists bool
+	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + fmt.Sprintf("%d", hotelId) + "' AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist or you are not authorized to delete a room for this hotel",
+		})
+		return
+	}
+
+	query = "DELETE FROM rooms WHERE room_id = '" + roomId + "';"
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "DeleteRoomHandler",
+		"message": "Room Deleted Successfully",
 	})
 }
 

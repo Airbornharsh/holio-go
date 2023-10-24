@@ -13,7 +13,7 @@ func RoomRoutes(r *gin.Engine) {
 	// r.GET("/rooms/popular", controllers.GetPopularRoomsHandler)
 	r.GET("/room/:id", controllers.GetRoomHandler)
 	r.PUT("/room/:id", middlewares.TokenVerifyMiddleWare, controllers.UpdateRoomHandler)
-	// r.DELETE("/rooms/:id", controllers.DeleteRoomHandler)
+	r.DELETE("/room/:id", middlewares.TokenVerifyMiddleWare, controllers.DeleteRoomHandler)
 
 	//Room Details
 	// r.GET("/hotels/:hotelId/rooms", controllers.GetRoomsForHotelHandler)
