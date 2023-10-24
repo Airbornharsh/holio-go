@@ -65,7 +65,38 @@ func UpdateUserHandler(c *gin.Context) {
 }
 
 func DeleteUserHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "model") {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+	}
+
+	type NewUser struct {
+		Username string `json:"username"`
+		Address  string `json:"address"`
+		FullName string `json:"full_name"`
+		UserType string `json:"user_type"`
+	}
+
+	var newUser NewUser
+
+	err := c.ShouldBindJSON(&newUser)
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	query := "DELETE FROM users WHERE user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "';"
+
+	DB, _ := database.GetDB()
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "DeleteUserHandler",
+		"message": "User Deleted",
 	})
 }
