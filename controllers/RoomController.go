@@ -253,20 +253,53 @@ func DeleteRoomHandler(c *gin.Context) {
 }
 
 func GetRoomsForHotelHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "GetRoomsForHotelHandler",
-	})
-}
+	hotelId := c.Param("hotelId")
 
-func GetRoomDetailsHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "GetRoomDetailsHandler",
-	})
-}
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Hotel Id",
+		})
+		return
+	}
 
-func CheckRoomAvailabilityHandler(c *gin.Context) {
+	query := "SELECT * FROM rooms WHERE hotel_id = '" + hotelId + "';"
+
+	var rooms []models.Room
+
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	for rows.Next() {
+		var room models.Room
+
+		err = rows.Scan(&room.RoomID, &room.HotelID, &room.RoomNumber, &room.RoomType, &room.RoomCapacity, &room.Description, &room.Price, &room.Rating, &room.Availability)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		rooms = append(rooms, room)
+	}
+
+	if rooms == nil {
+		c.JSON(400, gin.H{
+			"message": "No Rooms Found",
+		})
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "CheckRoomAvailabilityHandler",
+		"message": "Rooms Found",
+		"rooms":   rooms,
 	})
 }
 

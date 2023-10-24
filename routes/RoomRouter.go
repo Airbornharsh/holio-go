@@ -16,11 +16,9 @@ func RoomRoutes(r *gin.Engine) {
 	r.DELETE("/room/:id", middlewares.TokenVerifyMiddleWare, controllers.DeleteRoomHandler)
 
 	//Room Details
-	// r.GET("/hotels/:hotelId/rooms", controllers.GetRoomsForHotelHandler)
-	// r.GET("/hotels/:hotelId/rooms/:roomId", controllers.GetRoomDetailsHandler)
+	r.GET("/hotels/:hotelId/rooms", controllers.GetRoomsForHotelHandler)
 
 	//Bookinga
-	// r.GET("/hotels/:hotelId/rooms/availability", controllers.CheckRoomAvailabilityHandler)
 	// r.POST("/bookings", controllers.CreateBookingHandler)
 	// r.GET("/users/:userId/bookings", controllers.GetUserBookingsHandler)
 	// r.DELETE("/users/:userId/bookings/:bookingId", controllers.CancelBookingHandler)
