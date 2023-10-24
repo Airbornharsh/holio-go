@@ -20,7 +20,7 @@ func RoomRoutes(r *gin.Engine) {
 
 	//Bookinga
 	r.POST("/bookings", middlewares.TokenVerifyMiddleWare, controllers.CreateBookingHandler)
-	// r.GET("/users/:userId/bookings", controllers.GetUserBookingsHandler)
+	r.GET("/users/bookings", middlewares.TokenVerifyMiddleWare, controllers.GetUserBookingsHandler)
 	// r.DELETE("/users/:userId/bookings/:bookingId", controllers.CancelBookingHandler)
 
 	//Changing the Availability of a Room

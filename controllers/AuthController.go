@@ -28,10 +28,7 @@ func SignupHandler(c *gin.Context) {
 	}
 
 	//Getting DB
-	DB, err := database.GetDB()
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	//Check if User Already Exists
 	query := `SELECT EXISTS(SELECT 1 FROM users WHERE username = '` + user.Username + `' OR email = '` + user.Email + `' OR phone_number = '` + user.PhoneNumber + `');`
@@ -105,10 +102,7 @@ func LoginHanlder(c *gin.Context) {
 	}
 
 	//Getting DB
-	DB, err := database.GetDB()
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	//Check if User Already Exists
 	query := `SELECT * FROM users WHERE username = '` + tempuser.Username + `' OR email = '` + tempuser.Email + `' OR phone_number = '` + tempuser.PhoneNumber + `';`
@@ -195,10 +189,7 @@ func ChangePasswordHandler(c *gin.Context) {
 
 	query := "SELECT password FROM users WHERE user_id = '" + strconv.Itoa(user.UserID) + "';"
 
-	DB, err := database.GetDB()
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	rows, err := DB.Query(query)
 	if helpers.ErrorResponse(c, err) {
@@ -255,12 +246,8 @@ func ChangeEmailHandler(c *gin.Context) {
 
 	query := "UPDATE users SET email = '" + email.NewEmail + "' WHERE user_id = '" + strconv.Itoa(tempUser.(models.User).UserID) + "';"
 
-	DB, err := database.GetDB()
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
-
-	_, err = DB.Exec(query)
+	DB, _ := database.GetDB()
+	_, err := DB.Exec(query)
 	if helpers.ErrorResponse(c, err) {
 		return
 	}
@@ -287,12 +274,8 @@ func ChangePhoneHandler(c *gin.Context) {
 
 	query := "UPDATE users SET phone_number = '" + phoneNumber.NewPhoneNumber + "' WHERE user_id = '" + strconv.Itoa(tempUser.(models.User).UserID) + "';"
 
-	DB, err := database.GetDB()
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
-
-	_, err = DB.Exec(query)
+	DB, _ := database.GetDB()
+	_, err := DB.Exec(query)
 	if helpers.ErrorResponse(c, err) {
 		return
 	}

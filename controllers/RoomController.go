@@ -84,13 +84,8 @@ func GetRoomHandler(c *gin.Context) {
 
 	var room models.Room
 
-	DB, err := database.GetDB()
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
-
-	err = DB.QueryRow(query).Scan(&room.RoomID, &room.HotelID, &room.RoomNumber, &room.RoomType, &room.RoomCapacity, &room.Description, &room.Price, &room.Rating, &room.Availability)
+	DB, _ := database.GetDB()
+	err := DB.QueryRow(query).Scan(&room.RoomID, &room.HotelID, &room.RoomNumber, &room.RoomType, &room.RoomCapacity, &room.Description, &room.Price, &room.Rating, &room.Availability)
 
 	if helpers.ErrorResponse(c, err) {
 		return
@@ -129,11 +124,7 @@ func UpdateRoomHandler(c *gin.Context) {
 		return
 	}
 
-	DB, err := database.GetDB()
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	var hotelId int
 	query := "SELECT hotel_id FROM rooms WHERE room_id = '" + roomId + "';"
@@ -205,15 +196,11 @@ func DeleteRoomHandler(c *gin.Context) {
 	}
 
 	var hotelId int
-	DB, err := database.GetDB()
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	query := "SELECT hotel_id FROM rooms WHERE room_id = '" + roomId + "';"
 
-	err = DB.QueryRow(query).Scan(&hotelId)
+	err := DB.QueryRow(query).Scan(&hotelId)
 
 	if helpers.ErrorResponse(c, err) {
 		return
@@ -266,11 +253,7 @@ func GetRoomsForHotelHandler(c *gin.Context) {
 
 	var rooms []models.Room
 
-	DB, err := database.GetDB()
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	rows, err := DB.Query(query)
 
@@ -321,11 +304,7 @@ func CreateBookingHandler(c *gin.Context) {
 		return
 	}
 
-	DB, err := database.GetDB()
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	var roomExists bool
 
@@ -417,8 +396,41 @@ func CreateBookingHandler(c *gin.Context) {
 }
 
 func GetUserBookingsHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser != nil) {
+		c.JSON(401, gin.H{
+			"message": "No User",
+		})
+	}
+
+	DB, _ := database.GetDB()
+
+	query := "SELECT * FROM bookings WHERE user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "';"
+
+	var bookings []models.Booking
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	for rows.Next() {
+		var booking models.Booking
+
+		err = rows.Scan(&booking.BookingID, &booking.UserID, &booking.RoomID, &booking.CheckInDate, &booking.CheckOutDate, &booking.TotalPrice, &booking.BookingStatus)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		bookings = append(bookings, booking)
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetUserBookingsHandler",
+		"message":  "Got Bookings",
+		"bookings": bookings,
 	})
 }
 
@@ -459,11 +471,7 @@ func ChangeRoomAvailabilityHandler(c *gin.Context) {
 		return
 	}
 
-	DB, err := database.GetDB()
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
+	DB, _ := database.GetDB()
 
 	var hotelId int
 
