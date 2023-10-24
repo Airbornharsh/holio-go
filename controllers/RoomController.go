@@ -435,8 +435,53 @@ func GetUserBookingsHandler(c *gin.Context) {
 }
 
 func CancelBookingHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to cancel a booking",
+		})
+		return
+	}
+
+	bookingId := c.Param("bookingId")
+
+	if bookingId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Booking Id",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	var bookingExists bool
+
+	query := "SELECT EXISTS (SELECT 1 FROM bookings WHERE booking_id = '" + bookingId + "' AND user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err := DB.QueryRow(query).Scan(&bookingExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !bookingExists {
+		c.JSON(400, gin.H{
+			"message": "Booking does not exist or you are not authorized to cancel this booking",
+		})
+		return
+	}
+
+	query = "UPDATE bookings SET booking_status = 'cancelled' WHERE booking_id = '" + bookingId + "';"
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "CancelBookingHandler",
+		"message": "Cancelled the Booking",
 	})
 }
 
