@@ -13,7 +13,7 @@ import (
 func CreateHotelHandler(c *gin.Context) {
 	tempuser, exists := c.Get("user")
 
-	if !exists || (exists && tempuser.(models.User).UserType != "owner") {
+	if !exists || (exists && tempuser != nil && tempuser.(models.User).UserType != "owner") {
 		c.JSON(401, gin.H{
 			"message": "Unauthorized",
 		})
@@ -164,7 +164,7 @@ func GetHotelHandler(c *gin.Context) {
 func UpdateHotelHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
 
-	if !exists || (exists && tempUser.(models.User).UserType != "owner") {
+	if !exists || (exists && tempUser != nil && tempUser.(models.User).UserType != "owner") {
 		c.JSON(401, gin.H{
 			"message": "Unauthorized",
 		})
@@ -214,7 +214,7 @@ func UpdateHotelHandler(c *gin.Context) {
 func DeleteHotelHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
 
-	if !exists || (exists && tempUser.(models.User).UserType != "owner") {
+	if !exists || (exists && tempUser != nil && tempUser.(models.User).UserType != "owner") {
 		c.JSON(401, gin.H{
 			"message": "Unauthorized",
 		})
