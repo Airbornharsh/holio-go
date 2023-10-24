@@ -1,16 +1,25 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
-
-func CreateUserHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "CreateUserHandler",
-	})
-}
+import (
+	"github.com/airbornharsh/holio-go/models"
+	"github.com/gin-gonic/gin"
+)
 
 func GetUserHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "model") {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+	}
+
+	user := tempUser.(models.User)
+	user.Password = ""
+
 	c.JSON(200, gin.H{
-		"message": "GetUserHandler",
+		"message":  "Got the User",
+		"userData": user,
 	})
 }
 
@@ -23,29 +32,5 @@ func UpdateUserHandler(c *gin.Context) {
 func DeleteUserHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "DeleteUserHandler",
-	})
-}
-
-func ChangeUserNameHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeUserFirstNameHandler",
-	})
-}
-
-func ChangeUserFullNameHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeUserFullNameHandler",
-	})
-}
-
-func ChangeUserAddressHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeUserAddressHandler",
-	})
-}
-
-func ChangeUserTypeHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeUserTypeHandler",
 	})
 }
