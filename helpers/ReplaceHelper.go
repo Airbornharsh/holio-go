@@ -52,3 +52,25 @@ func ReplaceUser(user *models.User, newUser *models.User) *models.User {
 	}
 	return user
 }
+
+func ReplaceRoom(room *models.Room, newRoom *models.Room) *models.Room {
+	if newRoom.RoomNumber != 0 {
+		room.RoomNumber = newRoom.RoomNumber
+	}
+	if newRoom.RoomType != "" {
+		room.RoomType = newRoom.RoomType
+	}
+	if newRoom.RoomCapacity != 0 {
+		room.RoomCapacity = newRoom.RoomCapacity
+	}
+	if newRoom.Description != "" {
+		room.Description = newRoom.Description
+	}
+	if newRoom.Price != 0 {
+		room.Price = newRoom.Price
+	}
+	if newRoom.Rating != 0 {
+		room.Rating = newRoom.Rating
+	}
+	return room
+}

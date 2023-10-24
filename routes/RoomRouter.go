@@ -24,16 +24,6 @@ func RoomRoutes(r *gin.Engine) {
 	// r.GET("/users/:userId/bookings", controllers.GetUserBookingsHandler)
 	// r.DELETE("/users/:userId/bookings/:bookingId", controllers.CancelBookingHandler)
 
-	//Change Room Details
-	// r.PUT("/rooms/:id/change-name", controllers.ChangeRoomNameHandler)
-	// r.PUT("/rooms/:id/change-description", controllers.ChangeRoomDescriptionHandler)
-	// r.PUT("/rooms/:id/change-price", controllers.ChangeRoomPriceHandler)
-	// r.PUT("/rooms/:id/change-capacity", controllers.ChangeRoomCapacityHandler)
-	// r.PUT("/rooms/:id/change-avg-rating", controllers.ChangeRoomAvgRatingHandler)
-	// r.PUT("/rooms/:id/change-avg-price", controllers.ChangeRoomAvgPriceHandler)
-	// r.PUT("/rooms/:id/change-location", controllers.ChangeRoomLocationHandler)
-	// r.PUT("/rooms/:id/change-facilities", controllers.ChangeRoomFacilitiesHandler)
-	// r.PUT("/rooms/:id/change-amenities", controllers.ChangeRoomAmenitiesHandler)
-	// r.PUT("/rooms/:id/change-photos", controllers.ChangeRoomPhotosHandler)
+	//Changing the Availability of a Room
 	// r.PUT("/rooms/:id/change-availability", controllers.ChangeRoomAvailabilityHandler)
 }
