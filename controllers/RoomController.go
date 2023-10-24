@@ -304,8 +304,115 @@ func GetRoomsForHotelHandler(c *gin.Context) {
 }
 
 func CreateBookingHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to create a booking",
+		})
+		return
+	}
+
+	var booking *models.Booking
+
+	err := c.BindJSON(&booking)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var roomExists bool
+
+	query := "SELECT EXISTS (SELECT 1 FROM rooms WHERE room_id = '" + fmt.Sprintf("%d", booking.RoomID) + "');"
+
+	err = DB.QueryRow(query).Scan(&roomExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !roomExists {
+		c.JSON(400, gin.H{
+			"message": "Room does not exist",
+		})
+		return
+	}
+
+	var roomAvailability bool
+
+	query = "SELECT availability FROM rooms WHERE room_id = '" + fmt.Sprintf("%d", booking.RoomID) + "';"
+
+	err = DB.QueryRow(query).Scan(&roomAvailability)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !roomAvailability {
+		c.JSON(400, gin.H{
+			"message": "Room is not available",
+		})
+		return
+	}
+
+	var hotelId int
+
+	query = "SELECT hotel_id FROM rooms WHERE room_id = '" + fmt.Sprintf("%d", booking.RoomID) + "';"
+
+	err = DB.QueryRow(query).Scan(&hotelId)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var hotelExists bool
+
+	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + fmt.Sprintf("%d", hotelId) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist",
+		})
+		return
+	}
+
+	query = "INSERT into bookings (user_id,room_id,check_in_date,check_out_date,total_price,booking_status) VALUES ('" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "','" + fmt.Sprintf("%d", booking.RoomID) + "','" + booking.CheckInDate + "','" + booking.CheckOutDate + "','" + fmt.Sprintf("%.2f", booking.TotalPrice) + "','" + booking.BookingStatus + "') RETURNING booking_id;"
+
+	var bookingID int
+	row, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	defer row.Close()
+
+	row.Next()
+
+	err = row.Scan(&bookingID)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	booking.UserID = tempUser.(models.User).UserID
+	booking.BookingID = bookingID
+
 	c.JSON(200, gin.H{
-		"message": "CreateBookingHandler",
+		"message": "Booking Created Successfully",
+		"booking": booking,
 	})
 }
 
