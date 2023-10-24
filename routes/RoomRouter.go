@@ -21,6 +21,7 @@ func RoomRoutes(r *gin.Engine) {
 	//Bookinga
 	r.POST("/bookings", middlewares.TokenVerifyMiddleWare, controllers.CreateBookingHandler)
 	r.GET("/users/bookings", middlewares.TokenVerifyMiddleWare, controllers.GetUserBookingsHandler)
+	r.GET("/admin/users/:userId/bookings", middlewares.TokenVerifyMiddleWare, controllers.GetAdminUserBookingsHandler)
 	r.DELETE("/users/bookings/:bookingId", middlewares.TokenVerifyMiddleWare, controllers.CancelBookingHandler)
 	r.DELETE("/amdin/bookings/:bookingId", middlewares.TokenVerifyMiddleWare, controllers.AdminCancelBookingHandler)
 

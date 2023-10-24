@@ -434,6 +434,58 @@ func GetUserBookingsHandler(c *gin.Context) {
 	})
 }
 
+func GetAdminUserBookingsHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to get the bookings of a user",
+		})
+		return
+	}
+
+	userId := c.Param("userId")
+
+	if userId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid User Id",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	query := `SELECT b.booking_id, b.user_id, b.room_id, b.check_in_date, b.check_out_date, b.total_price, b.booking_status FROM bookings b 
+	INNER JOIN rooms r ON b.room_id = r.room_id 
+	INNER JOIN hotels h ON r.hotel_id = h.hotel_id 
+	WHERE b.user_id = '` + userId + `' AND h.owner_user_id = '` + fmt.Sprintf("%d", tempUser.(models.User).UserID) + `';`
+
+	var bookings []models.Booking
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	for rows.Next() {
+		var booking models.Booking
+
+		err = rows.Scan(&booking.BookingID, &booking.UserID, &booking.RoomID, &booking.CheckInDate, &booking.CheckOutDate, &booking.TotalPrice, &booking.BookingStatus)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		bookings = append(bookings, booking)
+	}
+
+	c.JSON(200, gin.H{
+		"message":  "User Bookings",
+		"bookings": bookings,
+	})
+}
+
 func CancelBookingHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
 
