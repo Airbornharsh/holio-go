@@ -1,13 +1,14 @@
 package routes
 
 import (
-	// "github.com/airbornharsh/holio-go/controllers"
+	"github.com/airbornharsh/holio-go/controllers"
+	"github.com/airbornharsh/holio-go/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
 func RoomRoutes(r *gin.Engine) {
-	//Rooms
-	// r.POST("/rooms", controllers.CreateRoomHandler)
+	// Rooms
+	r.POST("/rooms", middlewares.TokenVerifyMiddleWare, controllers.CreateRoomHandler)
 	// r.GET("/rooms/search", controllers.SearchRoomsHandler)
 	// r.GET("/rooms/popular", controllers.GetPopularRoomsHandler)
 	// r.GET("/rooms/:id", controllers.GetRoomHandler)

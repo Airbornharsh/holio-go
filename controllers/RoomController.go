@@ -1,10 +1,60 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"fmt"
+
+	"github.com/airbornharsh/holio-go/database"
+	"github.com/airbornharsh/holio-go/helpers"
+	"github.com/airbornharsh/holio-go/models"
+	"github.com/gin-gonic/gin"
+)
 
 func CreateRoomHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to create a room",
+		})
+		return
+	}
+
+	var room *models.Room
+
+	err := c.BindJSON(&room)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	var hotelExists bool
+	query := "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + fmt.Sprintf("%d", room.HotelID) + "' AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist or you are not authorized to create a room for this hotel",
+		})
+		return
+	}
+
+	query = "INSERT into rooms (hotel_id,room_number,room_type,room_capacity,description,price,rating,availability) VALUES ('" + fmt.Sprintf("%d", room.HotelID) + "','" + fmt.Sprintf("%d", room.RoomNumber) + "','" + room.RoomType + "','" + fmt.Sprintf("%d", room.RoomCapacity) + "','" + room.Description + "','" + fmt.Sprintf("%.2f", room.Price) + "','" + fmt.Sprintf("%.2f", room.Rating) + "','" + fmt.Sprintf("%t", room.Availability) + "');"
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "CreateRoomHandler",
+		"message": "Room Created",
 	})
 }
 
@@ -74,68 +124,8 @@ func CancelBookingHandler(c *gin.Context) {
 	})
 }
 
-func ChangeRoomNameHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomNameHandler",
-	})
-}
-
-func ChangeRoomDescriptionHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomDescriptionHandler",
-	})
-}
-
-func ChangeRoomPriceHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomPriceHandler",
-	})
-}
-
-func ChangeRoomCapacityHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomCapacityHandler",
-	})
-}
-
-func ChangeRoomPhotosHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomImagesHandler",
-	})
-}
-
 func ChangeRoomAvailabilityHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "ChangeRoomStatusHandler",
-	})
-}
-
-func ChangeRoomAvgRatingHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomAvgRatingHandler",
-	})
-}
-
-func ChangeRoomAvgPriceHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomAvgPriceHandler",
-	})
-}
-
-func ChangeRoomLocationHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomLocationHandler",
-	})
-}
-
-func ChangeRoomFacilitiesHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomFacilitiesHandler",
-	})
-}
-
-func ChangeRoomAmenitiesHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "ChangeRoomAmenitiesHandler",
 	})
 }
