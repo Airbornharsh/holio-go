@@ -21,7 +21,7 @@ func HotelRoutes(r *gin.Engine) {
 	r.DELETE("/hotel/:id", middlewares.TokenVerifyMiddleWare, controllers.DeleteHotelHandler)
 
 	//Hotel Details
-	r.PUT("/hotels/:id/change-facilities", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelFacilitiesHandler)
-	r.PUT("/hotels/:id/change-rooms", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelRoomsHandler)
-	r.PUT("/hotels/:id/change-amenities", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelAmenitiesHandler)
+	// r.PUT("/hotels/:id/change-facilities", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelFacilitiesHandler)
+	// r.PUT("/hotels/:id/change-rooms", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelRoomsHandler)
+	// r.PUT("/hotels/:id/change-amenities", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelAmenitiesHandler)
 }
