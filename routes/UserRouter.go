@@ -9,6 +9,6 @@ import (
 
 func UserRoutes(r *gin.Engine) {
 	r.GET("/user/:id", middlewares.TokenVerifyMiddleWare, controllers.GetUserHandler)
-	// r.PUT("/user/:id", controllers.UpdateUserHandler)
+	r.PUT("/user/:id", middlewares.TokenVerifyMiddleWare, controllers.UpdateUserHandler)
 	// r.DELETE("/user/:id", controllers.DeleteUserHandler)
 }
