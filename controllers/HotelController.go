@@ -212,8 +212,35 @@ func UpdateHotelHandler(c *gin.Context) {
 }
 
 func DeleteHotelHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser.(models.User).UserType != "owner") {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	hotelId := c.Param("id")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Hotel Id",
+		})
+		return
+	}
+
+	query := `DELETE FROM hotels WHERE owner_user_id = '` + fmt.Sprintf("%d", tempUser.(models.User).UserID) + `' AND hotel_id = '` + string(hotelId) + `';`
+
+	DB, _ := database.GetDB()
+	_, err := DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "DeleteHotelHandler",
+		"message": "Hotel Deleted Successfully",
 	})
 }
 

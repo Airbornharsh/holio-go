@@ -49,7 +49,7 @@ func makeHotelsTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Hotels (
 			hotel_id SERIAL PRIMARY KEY,
-			owner_user_id INT REFERENCES Users(user_id),
+			owner_user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			description TEXT,
 			address TEXT,
@@ -70,7 +70,7 @@ func makeHotelFacilitiesTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS HotelFacilities (
 			facility_id SERIAL PRIMARY KEY,
-			hotel_id INT REFERENCES Hotels(hotel_id),
+			hotel_id INT REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
 			name VARCHAR(255) NOT NULL,
 			description TEXT
 		);
@@ -82,7 +82,7 @@ func makeRoomsTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Rooms (
 			room_id SERIAL PRIMARY KEY,
-			hotel_id INT REFERENCES Hotels(hotel_id),
+			hotel_id INT REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
 			room_number INT NOT NULL,
 			room_type VARCHAR(100) NOT NULL,
 			room_capacity INT NOT NULL,
@@ -99,7 +99,7 @@ func makeAmenitiesTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Amenities (
 			amenity_id SERIAL PRIMARY KEY,
-			Hotel_id INT REFERENCES Hotels(hotel_id),
+			Hotel_id INT REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
       name VARCHAR(255) NOT NULL,
       description TEXT
 		);
@@ -110,8 +110,8 @@ func makeAmenitiesTable(db *sql.DB) {
 func makeRoomAmenitiesTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS RoomAmenities (
-			room_id INT REFERENCES Rooms(room_id),
-			amenity_id INT REFERENCES Amenities(amenity_id),
+			room_id INT REFERENCES Rooms(room_id) ON DELETE CASCADE,
+			amenity_id INT REFERENCES Amenities(amenity_id) ON DELETE CASCADE,
 			PRIMARY KEY (room_id, amenity_id)
 		);
 	`
@@ -122,8 +122,8 @@ func makeBookingsTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Bookings (
 			booking_id SERIAL PRIMARY KEY,
-      user_id INT REFERENCES Users(user_id),
-      room_id INT REFERENCES Rooms(room_id),
+      user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
+      room_id INT REFERENCES Rooms(room_id) ON DELETE CASCADE,
       check_in_date DATE NOT NULL,
       check_out_date DATE NOT NULL,
       total_price DECIMAL(10, 2) NOT NULL,
@@ -137,8 +137,8 @@ func makeReviewsTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Reviews (
 			review_id SERIAL PRIMARY KEY,
-			user_id INT REFERENCES Users(user_id),
-			hotel_id INT REFERENCES Hotels(hotel_id),
+			user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
+			hotel_id INT REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
 			rating DECIMAL(3, 2) NOT NULL,
 			review_text TEXT,
 			review_date DATE NOT NULL
@@ -151,8 +151,8 @@ func makePaymentsTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS Payments (
 			payment_id SERIAL PRIMARY KEY,
-			user_id INT REFERENCES Users(user_id),
-			booking_id INT REFERENCES Bookings(booking_id),
+			user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
+			booking_id INT REFERENCES Bookings(booking_id) ON DELETE CASCADE,
 			payment_date DATE NOT NULL,
 			amount DECIMAL(10, 2) NOT NULL,
 			payment_status VARCHAR(50) NOT NULL
@@ -165,7 +165,7 @@ func makeHotelImagesTable(db *sql.DB) {
 	c := `
 		CREATE TABLE IF NOT EXISTS HotelImages (
 			image_id SERIAL PRIMARY KEY,
-			hotel_id INT REFERENCES Hotels(hotel_id),
+			hotel_id INT REFERENCES Hotels(hotel_id) ON DELETE CASCADE,
 			image_url TEXT NOT NULL,
 			description TEXT
 		);

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,8 @@ func main() {
 	}
 
 	r := gin.New()
-	r.Use(gin.Logger())
+	// r.Use(gin.Logger())
+	gin.SetMode(gin.ReleaseMode)
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -33,28 +35,7 @@ func main() {
 
 	routes.Router(r)
 
+	fmt.Println("Server Started at Port " + port)
 	r.Run(":" + port)
 
-	// c := "CREATE TABLE IF NOT EXISTS widgets (id serial PRIMARY KEY, name text NOT NULL)"
-	// _, err = conc.Exec(c)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// defer conc.Close()
-
-	// c = "SELECT name FROM widgets WHERE id = " + "1"
-
-	// var name string
-
-	// rows := conc.QueryRow(c)
-	// err = rows.Scan(&name)
-	// if err != nil {
-	// 	fmt.Println("Error in query statement")
-	// 	log.Fatal(err)
-	// }
-
-	// defer conc.Close()
-
-	// fmt.Println(name)
 }
