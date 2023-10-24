@@ -289,7 +289,78 @@ func CancelBookingHandler(c *gin.Context) {
 }
 
 func ChangeRoomAvailabilityHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to change the availability of a room",
+		})
+		return
+	}
+
+	roomId := c.Param("id")
+
+	if roomId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Room Id",
+		})
+		return
+	}
+
+	type RoomAvailability struct {
+		Availability bool `json:"availability"`
+	}
+
+	var availability *RoomAvailability
+
+	err := c.BindJSON(&availability)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var hotelId int
+
+	query := "SELECT hotel_id FROM rooms WHERE room_id = '" + roomId + "';"
+
+	err = DB.QueryRow(query).Scan(&hotelId)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var hotelExists bool
+
+	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + fmt.Sprintf("%d", hotelId) + "' AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist or you are not authorized to change the availability of a room for this hotel",
+		})
+		return
+	}
+
+	query = "UPDATE rooms SET availability = '" + fmt.Sprintf("%t", availability.Availability) + "' WHERE room_id = '" + roomId + "';"
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "ChangeRoomStatusHandler",
+		"message": "Changed Room Availability",
 	})
 }

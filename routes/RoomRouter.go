@@ -26,5 +26,5 @@ func RoomRoutes(r *gin.Engine) {
 	// r.DELETE("/users/:userId/bookings/:bookingId", controllers.CancelBookingHandler)
 
 	//Changing the Availability of a Room
-	// r.PUT("/rooms/:id/change-availability", controllers.ChangeRoomAvailabilityHandler)
+	r.PUT("/room/:id/change-availability", middlewares.TokenVerifyMiddleWare, controllers.ChangeRoomAvailabilityHandler)
 }
