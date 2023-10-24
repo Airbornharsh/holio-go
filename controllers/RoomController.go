@@ -71,14 +71,117 @@ func GetPopularRoomsHandler(c *gin.Context) {
 }
 
 func GetRoomHandler(c *gin.Context) {
+	roomId := c.Param("id")
+
+	if roomId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Room Id",
+		})
+		return
+	}
+
+	query := "SELECT * FROM rooms WHERE room_id = '" + roomId + "';"
+
+	var room models.Room
+
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	err = DB.QueryRow(query).Scan(&room.RoomID, &room.HotelID, &room.RoomNumber, &room.RoomType, &room.RoomCapacity, &room.Description, &room.Price, &room.Rating, &room.Availability)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetRoomHandler",
+		"message": "Got the Hotel ",
+		"room":    room,
 	})
 }
 
 func UpdateRoomHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to update a room",
+		})
+		return
+	}
+
+	roomId := c.Param("id")
+
+	if roomId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Room Id",
+		})
+		return
+	}
+
+	var newRoom *models.Room
+
+	err := c.BindJSON(&newRoom)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	DB, err := database.GetDB()
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var hotelId int
+	query := "SELECT hotel_id FROM rooms WHERE room_id = '" + roomId + "';"
+
+	err = DB.QueryRow(query).Scan(&hotelId)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var hotelExists bool
+	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + fmt.Sprintf("%d", hotelId) + "' AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist or you are not authorized to update a room for this hotel",
+		})
+		return
+	}
+
+	var room models.Room
+
+	query = "SELECT * FROM rooms WHERE room_id = '" + roomId + "';"
+
+	err = DB.QueryRow(query).Scan(&room.RoomID, &room.HotelID, &room.RoomNumber, &room.RoomType, &room.RoomCapacity, &room.Description, &room.Price, &room.Rating, &room.Availability)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	helpers.ReplaceRoom(&room, newRoom)
+
+	query = "UPDATE rooms SET room_number = '" + fmt.Sprintf("%d", room.RoomNumber) + "', room_type = '" + room.RoomType + "', room_capacity = '" + fmt.Sprintf("%d", room.RoomCapacity) + "', description = '" + room.Description + "', price = '" + fmt.Sprintf("%.2f", room.Price) + "', rating = '" + fmt.Sprintf("%.2f", room.Rating) + "', availability = '" + fmt.Sprintf("%t", room.Availability) + "' WHERE room_id = '" + roomId + "';"
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "UpdateRoomHandler",
+		"message": "Room Updated",
 	})
 }
 

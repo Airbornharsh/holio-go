@@ -11,8 +11,8 @@ func RoomRoutes(r *gin.Engine) {
 	r.POST("/rooms", middlewares.TokenVerifyMiddleWare, controllers.CreateRoomHandler)
 	// r.GET("/rooms/search", controllers.SearchRoomsHandler)
 	// r.GET("/rooms/popular", controllers.GetPopularRoomsHandler)
-	// r.GET("/rooms/:id", controllers.GetRoomHandler)
-	// r.PUT("/rooms/:id", controllers.UpdateRoomHandler)
+	r.GET("/room/:id", controllers.GetRoomHandler)
+	r.PUT("/room/:id", middlewares.TokenVerifyMiddleWare, controllers.UpdateRoomHandler)
 	// r.DELETE("/rooms/:id", controllers.DeleteRoomHandler)
 
 	//Room Details
