@@ -39,3 +39,16 @@ func ReplaceHotel(hotel *models.Hotel, newHotel *models.Hotel) *models.Hotel {
 
 	return hotel
 }
+
+func ReplaceUser(user *models.User, newUser *models.User) *models.User {
+	if newUser.Username != "" {
+		user.Username = newUser.Username
+	}
+	if newUser.Address != "" {
+		user.Address = newUser.Address
+	}
+	if newUser.FullName != "" {
+		user.FullName = newUser.FullName
+	}
+	return user
+}
