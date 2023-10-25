@@ -67,7 +67,7 @@ func CreateReviewHandler(c *gin.Context) {
 		return
 	}
 
-	query = "INSERT INTO reviews (user_id, hotel_id, rating, review_text, review_date) VALUES ('" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "', '" + fmt.Sprintf("%d", review.HotelID) + "', '" + fmt.Sprintf("%d", review.Rating) + "', '" + review.ReviewText + "', '" + review.ReviewDate + "')"
+	query = "INSERT INTO reviews (user_id, hotel_id, rating, review_text, review_date) VALUES ('" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "', '" + fmt.Sprintf("%d", review.HotelID) + "', '" + fmt.Sprintf("%0.2f", review.Rating) + "', '" + review.ReviewText + "', '" + review.ReviewDate + "')"
 
 	_, err = DB.Exec(query)
 
@@ -188,19 +188,70 @@ func GetHotelReviewsHandler(c *gin.Context) {
 }
 
 func GetReviewDetailsHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	hotelId := c.Param("hotelId")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Booking ID not provided",
+		})
+		return
+	}
+
+	reviewId := c.Param("reviewId")
+
+	if reviewId == "" {
+		c.JSON(400, gin.H{
+			"message": "Booking ID not provided",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	query := "SELECT * FROM hotels WHERE hotel_id = '" + hotelId + "';"
+
+	var hotel models.Hotel
+
+	err := DB.QueryRow(query).Scan(&hotel.HotelID, &hotel.OwnerUserId, &hotel.Name, &hotel.Description, &hotel.Address, &hotel.PhoneNumber, &hotel.WebsiteURL, &hotel.Email, &hotel.Latitude, &hotel.Longitude, &hotel.StarRating, &hotel.AvgRating, &hotel.AvgPrice)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	query = "SELECT * FROM reviews WHERE hotel_id = '" + hotelId + "' AND review_id = '" + reviewId + "';"
+
+	var review models.Review
+
+	err = DB.QueryRow(query).Scan(&review.ReviewID, &review.UserID, &review.HotelID, &review.Rating, &review.ReviewText, &review.ReviewDate)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetReviewDetailsHandler",
+		"message": "Review",
+		"review":  review,
+		"hotel":   hotel,
 	})
 }
 
-func UpdateReviewHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "UpdateReviewHandler",
-	})
-}
+// func UpdateReviewHandler(c *gin.Context) {
+// 	c.JSON(200, gin.H{
+// 		"message": "UpdateReviewHandler",
+// 	})
+// }
 
-func DeleteReviewHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "DeleteReviewHandler",
-	})
-}
+// func DeleteReviewHandler(c *gin.Context) {
+// 	c.JSON(200, gin.H{
+// 		"message": "DeleteReviewHandler",
+// 	})
+// }
