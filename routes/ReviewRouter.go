@@ -8,7 +8,7 @@ import (
 
 func ReviewsRoutes(r *gin.Engine) {
 	r.POST("/reviews", middlewares.TokenVerifyMiddleWare, controllers.CreateReviewHandler)
-	// r.GET("/reviews", controllers.GetAllReviewsHandler)
+	r.GET("/reviews", middlewares.TokenVerifyMiddleWare, controllers.GetAllReviewsHandler)
 
 	//Hotel Reviews
 	// r.GET("/hotels/:hotelId/reviews", controllers.GetHotelReviewsHandler)

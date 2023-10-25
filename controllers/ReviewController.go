@@ -99,8 +99,41 @@ func CreateReviewHandler(c *gin.Context) {
 }
 
 func GetAllReviewsHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	query := "SELECT * FROM reviews WHERE user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "';"
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var reviews []models.Review
+
+	for rows.Next() {
+		var review models.Review
+		err := rows.Scan(&review.ReviewID, &review.UserID, &review.HotelID, &review.Rating, &review.ReviewText, &review.ReviewDate)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		reviews = append(reviews, review)
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetAllReviewsHandler",
+		"message": "Review Created",
+		"reviews": reviews,
 	})
 }
 
