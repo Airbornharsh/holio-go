@@ -11,7 +11,7 @@ func ReviewsRoutes(r *gin.Engine) {
 	r.GET("/reviews", middlewares.TokenVerifyMiddleWare, controllers.GetAllReviewsHandler)
 
 	//Hotel Reviews
-	// r.GET("/hotels/:hotelId/reviews", controllers.GetHotelReviewsHandler)
+	r.GET("/hotels/:hotelId/reviews", middlewares.TokenVerifyMiddleWare, controllers.GetHotelReviewsHandler)
 	// r.GET("/hotels/:hotelId/reviews/:reviewId", controllers.GetReviewDetailsHandler)
 
 	//Review CRUD

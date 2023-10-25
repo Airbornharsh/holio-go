@@ -138,8 +138,52 @@ func GetAllReviewsHandler(c *gin.Context) {
 }
 
 func GetHotelReviewsHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	hotelId := c.Param("hotelId")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Booking ID not provided",
+		})
+		return
+	}
+
+	fmt.Println(hotelId)
+
+	DB, _ := database.GetDB()
+
+	query := "SELECT * FROM reviews WHERE hotel_id = '" + hotelId + "';"
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	var reviews []models.Review
+
+	for rows.Next() {
+		var review models.Review
+		err := rows.Scan(&review.ReviewID, &review.UserID, &review.HotelID, &review.Rating, &review.ReviewText, &review.ReviewDate)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		reviews = append(reviews, review)
+	}
+
 	c.JSON(200, gin.H{
-		"message": "GetHotelReviewsHandler",
+		"message": "Hotel Reviews",
+		"reviews": reviews,
 	})
 }
 
