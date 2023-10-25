@@ -58,8 +58,6 @@ func SearchHotelsHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(hotelName)
-
 	query := `SELECT * FROM hotels WHERE name ILIKE '%' || '` + hotelName + `'|| '%' AND avg_price BETWEEN '` + priceStart + `' AND '` + priceEnd + `';`
 
 	DB, _ := database.GetDB()
@@ -83,8 +81,6 @@ func SearchHotelsHandler(c *gin.Context) {
 
 		hotelRows = append(hotelRows, hotel)
 	}
-
-	fmt.Println(hotelRows)
 
 	c.JSON(200, gin.H{
 		"message": "Search Hotels",
@@ -244,7 +240,7 @@ func DeleteHotelHandler(c *gin.Context) {
 	})
 }
 
-func AddHotelPhotosHandler(c *gin.Context) {
+func AddHotelImagesHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
 
 	if !exists || (exists && tempUser != nil && tempUser.(models.User).UserType != "owner") {
@@ -294,7 +290,6 @@ func AddHotelPhotosHandler(c *gin.Context) {
 	query = "INSERT INTO HotelImages (hotel_id, image_url, description) VALUES ('" + string(hotelId) + "' , '" + hotelImage.ImageURL + "' , '" + hotelImage.Description + "');"
 
 	_, err = DB.Exec(query)
-	fmt.Println(hotelExists)
 
 	if helpers.ErrorResponse(c, err) {
 		return
@@ -302,6 +297,74 @@ func AddHotelPhotosHandler(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Add Hotel Photos Handler",
+	})
+}
+
+func GetAllImagesHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	hotelId := c.Param("id")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Hotel Id",
+		})
+		return
+	}
+
+	query := "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + hotelId + "' AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	var hotelExists bool
+
+	DB, _ := database.GetDB()
+
+	err := DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel Does Not Exist",
+		})
+		return
+	}
+
+	query = "SELECT * FROM HotelImages WHERE hotel_id = '" + hotelId + "';"
+
+	rows, err := DB.Query(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	defer rows.Close()
+
+	var hotelImages []models.HotelImage
+
+	for rows.Next() {
+		var hotelImage models.HotelImage
+
+		err := rows.Scan(&hotelImage.HotelImageID, &hotelImage.HotelID, &hotelImage.ImageURL, &hotelImage.Description)
+
+		if helpers.ErrorResponse(c, err) {
+			return
+		}
+
+		hotelImages = append(hotelImages, hotelImage)
+	}
+
+	c.JSON(200, gin.H{
+		"message": "All Photos",
+		"images":  hotelImages,
 	})
 }
 
