@@ -738,16 +738,76 @@ func AdminCheckInHandler(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "Checked In",
-	})	
+	})
 }
 
-// func AdminCheckOutHandler(c *gin.Context) {
-// 	tempUser, exists := c.Get("user")
+func AdminCheckOutHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
 
-// 	c.JSON(200, gin.H{
-// 		"message": "Checked Out",
-// 	})
-// }
+	if !exists || (exists && tempUser != nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to check out a user",
+		})
+		return
+	}
+
+	bookingId := c.Param("bookingId")
+
+	if bookingId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Booking Id",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	var bookingExists bool
+
+	query := "SELECT EXISTS (SELECT 1 FROM bookings WHERE booking_id = '" + bookingId + "' AND booking_status = 'checked_in' );"
+
+	err := DB.QueryRow(query).Scan(&bookingExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !bookingExists {
+		c.JSON(400, gin.H{
+			"message": "Booking does not exist or Booking is Cancelled or Checked Out",
+		})
+		return
+	}
+
+	var hotelExists bool
+
+	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = (SELECT hotel_id FROM rooms WHERE room_id = (SELECT room_id FROM bookings WHERE booking_id = '" + bookingId + "')) AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist or you are not authorized to check out a user for this hotel",
+		})
+		return
+	}
+
+	query = "UPDATE bookings SET booking_status = 'checked_out' WHERE booking_id = '" + bookingId + "';"
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Checked Out",
+	})
+}
 
 func ChangeRoomAvailabilityHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
