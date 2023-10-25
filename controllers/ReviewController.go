@@ -187,7 +187,7 @@ func GetHotelReviewsHandler(c *gin.Context) {
 	})
 }
 
-func GetReviewDetailsHandler(c *gin.Context) {
+func GetReviewDetailsWithHotelHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
 
 	if !exists || (exists && tempUser == nil) {
@@ -241,6 +241,43 @@ func GetReviewDetailsHandler(c *gin.Context) {
 		"message": "Review",
 		"review":  review,
 		"hotel":   hotel,
+	})
+}
+
+func GetReviewDetailsHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil) {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	reviewId := c.Param("reviewId")
+
+	if reviewId == "" {
+		c.JSON(400, gin.H{
+			"message": "Review ID not provided",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	query := "SELECT * FROM reviews WHERE review_id = '" + reviewId + "';"
+
+	var review models.Review
+
+	err := DB.QueryRow(query).Scan(&review.ReviewID, &review.UserID, &review.HotelID, &review.Rating, &review.ReviewText, &review.ReviewDate)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Review",
+		"review":  review,
 	})
 }
 

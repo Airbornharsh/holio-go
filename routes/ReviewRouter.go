@@ -12,7 +12,8 @@ func ReviewsRoutes(r *gin.Engine) {
 
 	//Hotel Reviews
 	r.GET("/hotels/:hotelId/reviews", middlewares.TokenVerifyMiddleWare, controllers.GetHotelReviewsHandler)
-	r.GET("/hotels/:hotelId/reviews/:reviewId", middlewares.TokenVerifyMiddleWare, controllers.GetReviewDetailsHandler)
+	r.GET("/hotels/:hotelId/reviews/:reviewId", middlewares.TokenVerifyMiddleWare, controllers.GetReviewDetailsWithHotelHandler)
+	r.GET("/reviews/:reviewId", middlewares.TokenVerifyMiddleWare, controllers.GetReviewDetailsHandler)
 
 	//Review CRUD
 	// r.PUT("/reviews/:reviewId", controllers.UpdateReviewHandler)
