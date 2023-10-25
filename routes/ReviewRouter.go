@@ -1,12 +1,13 @@
 package routes
 
 import (
-	// "github.com/airbornharsh/holio-go/controllers"
+	"github.com/airbornharsh/holio-go/controllers"
+	"github.com/airbornharsh/holio-go/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
 func ReviewsRoutes(r *gin.Engine) {
-	// r.POST("/reviews", controllers.CreateReviewHandler)
+	r.POST("/reviews", middlewares.TokenVerifyMiddleWare, controllers.CreateReviewHandler)
 	// r.GET("/reviews", controllers.GetAllReviewsHandler)
 
 	//Hotel Reviews
