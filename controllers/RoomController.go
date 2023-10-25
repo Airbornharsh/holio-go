@@ -605,6 +605,84 @@ func AdminCancelBookingHandler(c *gin.Context) {
 	})
 }
 
+func AdminConfirmBookingHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(400, gin.H{
+			"message": "You are not authorized to confirm a booking",
+		})
+		return
+	}
+
+	bookingId := c.Param("bookingId")
+
+	if bookingId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Booking Id",
+		})
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	var bookingExists bool
+
+	query := "SELECT EXISTS (SELECT 1 FROM bookings WHERE booking_id = '" + bookingId + "' AND booking_status = 'pending' );"
+
+	err := DB.QueryRow(query).Scan(&bookingExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !bookingExists {
+		c.JSON(400, gin.H{
+			"message": "Booking does not exist or Booking is Cancelled or Confirmed",
+		})
+		return
+	}
+
+	var hotelExists bool
+
+	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = (SELECT hotel_id FROM rooms WHERE room_id = (SELECT room_id FROM bookings WHERE booking_id = '" + bookingId + "')) AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel does not exist or you are not authorized to confirm a booking for this hotel",
+		})
+		return
+	}
+
+	query = "UPDATE bookings SET booking_status = 'confirmed' WHERE booking_id = '" + bookingId + "';"
+
+	_, err = DB.Exec(query)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Booking Confirmed",
+	})
+}
+
+// func AdminCheckOutHandler(c *gin.Context) {
+// 	tempUser, exists := c.Get("user")
+
+
+
+// 	c.JSON(200, gin.H{
+// 		"message": "Checked Out",
+// 	})
+// }
+
 func ChangeRoomAvailabilityHandler(c *gin.Context) {
 	tempUser, exists := c.Get("user")
 
@@ -677,77 +755,3 @@ func ChangeRoomAvailabilityHandler(c *gin.Context) {
 		"message": "Changed Room Availability",
 	})
 }
-
-func AdminConfirmBookingHandler(c *gin.Context) {
-	tempUser, exists := c.Get("user")
-
-	if !exists || (exists && tempUser == nil && tempUser.(models.User).UserType != "owner") {
-		c.JSON(400, gin.H{
-			"message": "You are not authorized to confirm a booking",
-		})
-		return
-	}
-
-	bookingId := c.Param("bookingId")
-
-	if bookingId == "" {
-		c.JSON(400, gin.H{
-			"message": "Invalid Booking Id",
-		})
-		return
-	}
-
-	DB, _ := database.GetDB()
-
-	var bookingExists bool
-
-	query := "SELECT EXISTS (SELECT 1 FROM bookings WHERE booking_id = '" + bookingId + "' AND booking_status = 'pending' );"
-
-	err := DB.QueryRow(query).Scan(&bookingExists)
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
-
-	if !bookingExists {
-		c.JSON(400, gin.H{
-			"message": "Booking does not exist or Booking is Cancelled or Confirmed",
-		})
-		return
-	}
-
-	var hotelExists bool
-
-	query = "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = (SELECT hotel_id FROM rooms WHERE room_id = (SELECT room_id FROM bookings WHERE booking_id = '" + bookingId + "')) AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
-
-	err = DB.QueryRow(query).Scan(&hotelExists)
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
-
-	if !hotelExists {
-		c.JSON(400, gin.H{
-			"message": "Hotel does not exist or you are not authorized to confirm a booking for this hotel",
-		})
-		return
-	}
-
-	query = "UPDATE bookings SET booking_status = 'confirmed' WHERE booking_id = '" + bookingId + "';"
-
-	_, err = DB.Exec(query)
-
-	if helpers.ErrorResponse(c, err) {
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message": "Booking Confirmed",
-	})
-}
-
-// func AdminCheckOutHandler(c *gin.Context) {
-// 	c.JSON(200, gin.H{
-// 		"message": "Checked Out",
-// 	})
-// }
