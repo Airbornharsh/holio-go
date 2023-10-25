@@ -244,6 +244,67 @@ func DeleteHotelHandler(c *gin.Context) {
 	})
 }
 
+func AddHotelPhotosHandler(c *gin.Context) {
+	tempUser, exists := c.Get("user")
+
+	if !exists || (exists && tempUser != nil && tempUser.(models.User).UserType != "owner") {
+		c.JSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
+
+	hotelId := c.Param("id")
+
+	if hotelId == "" {
+		c.JSON(400, gin.H{
+			"message": "Invalid Hotel Id",
+		})
+		return
+	}
+
+	var hotelImage models.HotelImage
+
+	err := c.ShouldBindJSON(&hotelImage)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	DB, _ := database.GetDB()
+
+	query := "SELECT EXISTS (SELECT 1 FROM hotels WHERE hotel_id = '" + hotelId + "' AND owner_user_id = '" + fmt.Sprintf("%d", tempUser.(models.User).UserID) + "');"
+
+	var hotelExists bool
+
+	err = DB.QueryRow(query).Scan(&hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	if !hotelExists {
+		c.JSON(400, gin.H{
+			"message": "Hotel Does Not Exist",
+		})
+		return
+	}
+
+	//insert photo model here
+	query = "INSERT INTO HotelImages (hotel_id, image_url, description) VALUES ('" + string(hotelId) + "' , '" + hotelImage.ImageURL + "' , '" + hotelImage.Description + "');"
+
+	_, err = DB.Exec(query)
+	fmt.Println(hotelExists)
+
+	if helpers.ErrorResponse(c, err) {
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "Add Hotel Photos Handler",
+	})
+}
+
 func ChangeHotelFacilitiesHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "ChangeHotelFacilitiesHandler",

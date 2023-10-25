@@ -17,17 +17,5 @@ func RoomRoutes(r *gin.Engine) {
 
 	//Room Details
 	r.GET("/hotels/:hotelId/rooms", controllers.GetRoomsForHotelHandler)
-
-	//Bookinga
-	r.POST("/bookings", middlewares.TokenVerifyMiddleWare, controllers.CreateBookingHandler)
-	r.GET("/users/bookings", middlewares.TokenVerifyMiddleWare, controllers.GetUserBookingsHandler)
-	r.GET("/admin/users/:userId/bookings", middlewares.TokenVerifyMiddleWare, controllers.GetAdminUserBookingsHandler)
-	r.DELETE("/users/bookings/:bookingId", middlewares.TokenVerifyMiddleWare, controllers.CancelBookingHandler)
-	r.PUT("/admin/bookings/:bookingId", middlewares.TokenVerifyMiddleWare, controllers.AdminConfirmBookingHandler)
-	r.DELETE("/admin/bookings/:bookingId", middlewares.TokenVerifyMiddleWare, controllers.AdminCancelBookingHandler)
-	r.PUT("/admin/bookings/:bookingId/checkin", middlewares.TokenVerifyMiddleWare, controllers.AdminCheckInHandler)
-	r.PUT("/admin/bookings/:bookingId/checkout", middlewares.TokenVerifyMiddleWare, controllers.AdminCheckOutHandler)
-
-	//Changing the Availability of a Room
 	r.PUT("/room/:id/change-availability", middlewares.TokenVerifyMiddleWare, controllers.ChangeRoomAvailabilityHandler)
 }

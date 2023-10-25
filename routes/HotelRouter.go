@@ -19,6 +19,7 @@ func HotelRoutes(r *gin.Engine) {
 	r.POST("/hotel", middlewares.TokenVerifyMiddleWare, controllers.CreateHotelHandler)
 	r.PUT("/hotel/:id", middlewares.TokenVerifyMiddleWare, controllers.UpdateHotelHandler)
 	r.DELETE("/hotel/:id", middlewares.TokenVerifyMiddleWare, controllers.DeleteHotelHandler)
+	r.PUT("/hotel/:id/photos", middlewares.TokenVerifyMiddleWare, controllers.AddHotelPhotosHandler)
 
 	//Hotel Details
 	// r.PUT("/hotels/:id/change-facilities", middlewares.TokenVerifyMiddleWare, controllers.ChangeHotelFacilitiesHandler)
