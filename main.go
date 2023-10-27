@@ -10,11 +10,6 @@ import (
 	"github.com/airbornharsh/holio-go/routes"
 )
 
-type widgets struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
 func main() {
 	database.DBInit()
 
