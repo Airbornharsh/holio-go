@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  holio-go:
+    image: holio-go  # Replace with your actual image name or build configuration
+    container_name: holio-go1_c
+    environment:
+      - PORT=${PORT}
+      - DB_URI=${DB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - "8080:8080"
