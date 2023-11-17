@@ -2,8 +2,8 @@ version: '3'
 
 services:
   holio-go:
-    image: holio-go  # Replace with your actual image name or build configuration
-    container_name: holio-go1_c
+    image: holio-go:latest  
+    container_name: holio-go2_c
     environment:
       - PORT=${PORT}
       - DB_URI=${DB_URI}
